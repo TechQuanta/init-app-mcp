@@ -5,3 +5,4 @@ __pycache__/
 logs/
 build/
 *.egg-info/
+.release-check/
