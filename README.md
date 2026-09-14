@@ -23,7 +23,7 @@ returned command.
 ## Requirements
 
 - Python 3.10 or later
-- MCP Python SDK v1 (`mcp>=1,<2`), which provides `FastMCP`
+- FastMCP v2 (`fastmcp>=2,<3`)
 
 ## Installation
 

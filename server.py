@@ -8,9 +8,11 @@ from pathlib import Path
 import sys
 
 
-SRC_DIR = Path(__file__).resolve().parent / "src"
-if str(SRC_DIR) not in sys.path:
-    sys.path.insert(0, str(SRC_DIR))
+# Resolve from this file, never from the process working directory.  This is
+# an absolute path in every environment, including Horizon's build container.
+ABSOLUTE_SOURCE_DIRECTORY = (Path(__file__).resolve().parent / "src").resolve()
+if str(ABSOLUTE_SOURCE_DIRECTORY) not in sys.path:
+    sys.path.insert(0, str(ABSOLUTE_SOURCE_DIRECTORY))
 
 from init_app_mcp.server import main, mcp
 

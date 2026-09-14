@@ -2,7 +2,7 @@ import json
 
 from init_app_mcp import __version__
 from init_app_mcp import service
-from init_app_mcp.server import main, mcp
+from init_app_mcp.server import TOOL_NAMES, main, mcp
 
 
 EXPECTED_TOOLS = {
@@ -14,7 +14,7 @@ EXPECTED_TOOLS = {
 
 
 def test_server_registers_the_documented_tools():
-    assert set(mcp._tool_manager._tools) == EXPECTED_TOOLS
+    assert set(TOOL_NAMES) == EXPECTED_TOOLS
 
 
 def test_list_tools_diagnostic_is_valid_json(capsys):
