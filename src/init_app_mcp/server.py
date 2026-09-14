@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import argparse
+import json
 from typing import Any
 
 try:
@@ -55,7 +57,38 @@ def build_server() -> FastMCP:
     return mcp
 
 
-def main() -> None:
+def main(argv: list[str] | None = None) -> None:
+    """Start MCP stdio transport or print safe local diagnostics."""
+    parser = argparse.ArgumentParser(description="Run the init-app FastMCP server.")
+    parser.add_argument(
+        "--list-tools",
+        action="store_true",
+        help="Print the tool names and exit without starting the MCP transport.",
+    )
+    parser.add_argument(
+        "--metadata",
+        action="store_true",
+        help="Print init-app command metadata and exit without starting the MCP transport.",
+    )
+    args = parser.parse_args(argv)
+
+    if args.list_tools:
+        print(
+            json.dumps(
+                {"server": mcp.name, "tools": sorted(mcp._tool_manager._tools)},
+                indent=2,
+            )
+        )
+        return
+    if args.metadata:
+        print(
+            json.dumps(
+                {**service.library_metadata(), **service.command_metadata()},
+                indent=2,
+            )
+        )
+        return
+
     mcp.run(transport="stdio")
 
 

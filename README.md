@@ -69,6 +69,19 @@ If your client requires an absolute Python executable, use:
 }
 ```
 
+## Manual diagnostics
+
+The default command starts a stdio MCP server, so it expects JSON-RPC messages
+from an MCP client such as VS Code. Do not press Enter after starting it in a
+terminal; a blank line is not a valid MCP request.
+
+Use these commands to inspect the installed server manually instead:
+
+```powershell
+.\.venv\Scripts\init-app-mcp.exe --list-tools
+.\.venv\Scripts\init-app-mcp.exe --metadata
+```
+
 ## Tools
 
 | Tool | Purpose |
