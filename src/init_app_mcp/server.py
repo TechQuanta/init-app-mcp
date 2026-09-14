@@ -76,6 +76,17 @@ def main(argv: list[str] | None = None) -> None:
         default="stdio",
         help="MCP transport to run (default: stdio). Use streamable-http for local HTTP testing.",
     )
+    parser.add_argument(
+        "--host",
+        default="127.0.0.1",
+        help="Host for HTTP transports (default: 127.0.0.1).",
+    )
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=8000,
+        help="Port for HTTP transports (default: 8000).",
+    )
     args = parser.parse_args(argv)
 
     if args.list_tools:
@@ -95,6 +106,10 @@ def main(argv: list[str] | None = None) -> None:
         )
         return
 
+    if not 1 <= args.port <= 65535:
+        parser.error("--port must be between 1 and 65535.")
+    mcp.settings.host = args.host
+    mcp.settings.port = args.port
     mcp.run(transport=args.transport)
 
 

@@ -85,10 +85,11 @@ Use these commands to inspect the installed server manually instead:
 To run a local HTTP MCP endpoint for manual client testing, use:
 
 ```powershell
-.\.venv\Scripts\init-app-mcp.exe --transport streamable-http
+.\.venv\Scripts\init-app-mcp.exe --transport streamable-http --port 8001
 ```
 
-It listens on `http://127.0.0.1:8000/mcp`. Keep that terminal open while your
+It listens on `http://127.0.0.1:8001/mcp`. Choose another available port if
+needed. Keep that terminal open while your
 MCP client is connected. Press `Ctrl+C` to stop it.
 
 ## Tools
