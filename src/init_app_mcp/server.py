@@ -70,6 +70,12 @@ def main(argv: list[str] | None = None) -> None:
         action="store_true",
         help="Print init-app command metadata and exit without starting the MCP transport.",
     )
+    parser.add_argument(
+        "--transport",
+        choices=("stdio", "sse", "streamable-http"),
+        default="stdio",
+        help="MCP transport to run (default: stdio). Use streamable-http for local HTTP testing.",
+    )
     args = parser.parse_args(argv)
 
     if args.list_tools:
@@ -89,7 +95,7 @@ def main(argv: list[str] | None = None) -> None:
         )
         return
 
-    mcp.run(transport="stdio")
+    mcp.run(transport=args.transport)
 
 
 if __name__ == "__main__":
