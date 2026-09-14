@@ -56,6 +56,21 @@ Configure an MCP client to use stdio transport:
 }
 ```
 
+## Horizon Deploy
+
+For Horizon Deploy's repository form, use these values:
+
+| Field | Value |
+| --- | --- |
+| Server name | `init-app` |
+| Entrypoint | `server.py` |
+| Requirements | `requirements.txt` |
+| Transport | Streamable HTTP |
+
+The root `server.py` is a deployment wrapper that exposes the same `mcp`
+server defined by the source package. It exists because Horizon asks for a
+Python file path rather than a Python import string.
+
 If your client requires an absolute Python executable, use:
 
 ```json

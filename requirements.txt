@@ -1,0 +1,2 @@
+# Runtime dependency for deployment platforms that use requirements.txt.
+mcp>=1.0.0,<2.0.0
