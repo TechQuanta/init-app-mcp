@@ -6,7 +6,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-from . import catalog
+from . import __version__, catalog
 
 
 PROJECT_NAME = re.compile(r"^[A-Za-z][A-Za-z0-9_-]{0,63}$")
@@ -75,7 +75,7 @@ def library_metadata() -> dict[str, Any]:
     """Return stable metadata that clients can inspect before calling tools."""
     return {
         "name": "init-app-mcp",
-        "version": "0.1.0",
+        "version": __version__,
         "target_cli": "init-app",
         "catalog_version": catalog.INIT_APP_VERSION,
         "description": "Independent FastMCP server that recommends init-app commands.",

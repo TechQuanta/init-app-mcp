@@ -30,7 +30,7 @@ returned command.
 Install from a clone:
 
 ```bash
-git clone https://github.com/TechQuanta/init-app-mcp.git
+git clone https://github.com/ashmeet07/init-app-mcp.git
 cd init-app-mcp
 python -m pip install .
 ```
@@ -68,6 +68,29 @@ If your client requires an absolute Python executable, use:
   }
 }
 ```
+
+## Manual diagnostics
+
+The default command starts a stdio MCP server, so it expects JSON-RPC messages
+from an MCP client such as VS Code. Do not press Enter after starting it in a
+terminal; a blank line is not a valid MCP request.
+
+Use these commands to inspect the installed server manually instead:
+
+```powershell
+.\.venv\Scripts\init-app-mcp.exe --list-tools
+.\.venv\Scripts\init-app-mcp.exe --metadata
+```
+
+To run a local HTTP MCP endpoint for manual client testing, use:
+
+```powershell
+.\.venv\Scripts\init-app-mcp.exe --transport streamable-http --port 8001
+```
+
+It listens on `http://127.0.0.1:8001/mcp`. Choose another available port if
+needed. Keep that terminal open while your
+MCP client is connected. Press `Ctrl+C` to stop it.
 
 ## Tools
 
@@ -118,6 +141,9 @@ python -m pytest
 python -m py_compile src/init_app_mcp/server.py src/init_app_mcp/service.py src/init_app_mcp/catalog.py
 ```
 
+Continuous integration runs this validation on Python 3.10 through 3.13 for
+every pull request to `main`.
+
 The project uses a source layout. Its capability catalog lives in
 `src/init_app_mcp/catalog.py`; update that catalog and its tests whenever
 `init-app` adds or changes CLI capabilities.
@@ -127,6 +153,15 @@ The project uses a source layout. Its capability catalog lives in
 This package is intentionally advisory. It does not access a user's project
 directory, execute `init-app`, write files, or invoke a shell. A compatible
 client must obtain user confirmation before running any recommended command.
+
+## Release checklist
+
+Before releasing a catalog update:
+
+1. Compare `src/init_app_mcp/catalog.py` with the supported `init-app` CLI.
+2. Update catalog tests for every new or changed flag or blueprint.
+3. Run the development checks above and inspect `--list-tools`.
+4. Open a pull request from `feat` to `main` and let CI pass before merging.
 
 ## License
 

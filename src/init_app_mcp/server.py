@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import argparse
+import json
 from typing import Any
 
 try:
@@ -55,8 +57,60 @@ def build_server() -> FastMCP:
     return mcp
 
 
-def main() -> None:
-    mcp.run(transport="stdio")
+def main(argv: list[str] | None = None) -> None:
+    """Start MCP stdio transport or print safe local diagnostics."""
+    parser = argparse.ArgumentParser(description="Run the init-app FastMCP server.")
+    parser.add_argument(
+        "--list-tools",
+        action="store_true",
+        help="Print the tool names and exit without starting the MCP transport.",
+    )
+    parser.add_argument(
+        "--metadata",
+        action="store_true",
+        help="Print init-app command metadata and exit without starting the MCP transport.",
+    )
+    parser.add_argument(
+        "--transport",
+        choices=("stdio", "sse", "streamable-http"),
+        default="stdio",
+        help="MCP transport to run (default: stdio). Use streamable-http for local HTTP testing.",
+    )
+    parser.add_argument(
+        "--host",
+        default="127.0.0.1",
+        help="Host for HTTP transports (default: 127.0.0.1).",
+    )
+    parser.add_argument(
+        "--port",
+        type=int,
+        default=8000,
+        help="Port for HTTP transports (default: 8000).",
+    )
+    args = parser.parse_args(argv)
+
+    if args.list_tools:
+        print(
+            json.dumps(
+                {"server": mcp.name, "tools": sorted(mcp._tool_manager._tools)},
+                indent=2,
+            )
+        )
+        return
+    if args.metadata:
+        print(
+            json.dumps(
+                {**service.library_metadata(), **service.command_metadata()},
+                indent=2,
+            )
+        )
+        return
+
+    if not 1 <= args.port <= 65535:
+        parser.error("--port must be between 1 and 65535.")
+    mcp.settings.host = args.host
+    mcp.settings.port = args.port
+    mcp.run(transport=args.transport)
 
 
 if __name__ == "__main__":
