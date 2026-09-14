@@ -1,0 +1,10 @@
+{
+  "servers": {
+    "init-app": {
+      "type": "stdio",
+      "command": "${workspaceFolder}\\.venv\\Scripts\\init-app-mcp.exe",
+      "args": [],
+      "cwd": "${workspaceFolder}"
+    }
+  }
+}
