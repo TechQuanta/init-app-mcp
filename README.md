@@ -30,7 +30,7 @@ returned command.
 Install from a clone:
 
 ```bash
-git clone https://github.com/TechQuanta/init-app-mcp.git
+git clone https://github.com/ashmeet07/init-app-mcp.git
 cd init-app-mcp
 python -m pip install .
 ```
