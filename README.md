@@ -69,7 +69,9 @@ For Horizon Deploy's repository form, use these values:
 
 The root `server.py` is a deployment wrapper that exposes the same `mcp`
 server defined by the source package. It exists because Horizon asks for a
-Python file path rather than a Python import string.
+Python file path rather than a Python import string. When Horizon runs this
+file, it uses Streamable HTTP automatically and honors its `HOST` and `PORT`
+environment variables.
 
 If your client requires an absolute Python executable, use:
 

@@ -16,4 +16,7 @@ from init_app_mcp.server import main, mcp
 
 
 if __name__ == "__main__":
-    main()
+    # Hosting platforms execute this file directly. Streamable HTTP is the
+    # correct transport for a deployed MCP endpoint; the package CLI remains
+    # stdio-first for local VS Code clients.
+    main(["--transport", "streamable-http", *sys.argv[1:]])

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from typing import Any
 
 try:
@@ -78,14 +79,14 @@ def main(argv: list[str] | None = None) -> None:
     )
     parser.add_argument(
         "--host",
-        default="127.0.0.1",
-        help="Host for HTTP transports (default: 127.0.0.1).",
+        default=os.environ.get("HOST", "127.0.0.1"),
+        help="Host for HTTP transports (default: HOST environment variable or 127.0.0.1).",
     )
     parser.add_argument(
         "--port",
         type=int,
-        default=8000,
-        help="Port for HTTP transports (default: 8000).",
+        default=int(os.environ.get("PORT", "8000")),
+        help="Port for HTTP transports (default: PORT environment variable or 8000).",
     )
     args = parser.parse_args(argv)
 
