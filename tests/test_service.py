@@ -26,7 +26,24 @@ def test_command_metadata_has_the_required_cli_contract():
     metadata = service.command_metadata()
     flags = {flag["name"] for flag in metadata["flags"]}
     assert metadata["command"] == "init-app <project_name>"
-    assert {"--framework", "--type", "--db", "--venv"} <= flags
+    assert {"--framework", "--type", "--db", "--venv", "--spec", "--dry-run", "--force", "--app-name"} <= flags
+
+
+def test_preview_supports_new_custom_and_safe_review_options():
+    result = service.project_command_preview(
+        "sample_api", strategy="custom", app_name="api", folders=["src/api", "tests"],
+        packages=["src/api"], spec_path="project.json", dry_run=True,
+    )
+    assert result["arguments"] == [
+        "init-app", "sample_api", "--framework", "fastapi", "--type", "custom",
+        "--spec", "project.json", "--db", "sqlite", "--venv", "y",
+        "--app-name", "api", "--folders", "src/api", "tests", "--packages", "src/api", "--dry-run",
+    ]
+
+
+def test_preview_rejects_unsafe_custom_paths():
+    with pytest.raises(ValueError, match="unsafe path"):
+        service.project_command_preview("sample", strategy="custom", folders=["../outside"])
 
 
 def test_recommendation_maps_requirement_to_supported_flags():

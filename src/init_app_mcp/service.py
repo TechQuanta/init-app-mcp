@@ -9,7 +9,8 @@ from typing import Any
 from . import __version__, catalog
 
 
-PROJECT_NAME = re.compile(r"^[A-Za-z][A-Za-z0-9_-]{0,63}$")
+PROJECT_NAME = re.compile(r"^[A-Za-z][A-Za-z0-9_-]{0,62}$")
+APP_NAME = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 STRATEGIES = catalog.STRATEGIES
 
 BLUEPRINT_SIGNALS = (
@@ -37,6 +38,30 @@ def _validate_project_name(project_name: str) -> str:
             "numbers, underscores, or hyphens (maximum 64 characters)."
         )
     return project_name
+
+
+def _validate_app_name(app_name: str | None) -> str | None:
+    if app_name is None:
+        return None
+    value = app_name.strip()
+    if not APP_NAME.fullmatch(value):
+        raise ValueError("app_name must be a valid Python package identifier.")
+    return value
+
+
+def _validate_relative_paths(values: list[str] | None, field: str) -> list[str]:
+    if values is None:
+        return []
+    if not all(isinstance(value, str) for value in values):
+        raise ValueError(f"{field} must contain only relative path strings.")
+    result: list[str] = []
+    for raw in values:
+        value = raw.replace("\\", "/").strip().strip("/")
+        if not value or ":" in value or any(part in {"", ".", ".."} for part in value.split("/")):
+            raise ValueError(f"{field} contains an unsafe path: {raw!r}.")
+        if value not in result:
+            result.append(value)
+    return result
 
 
 def _frameworks() -> tuple[str, ...]:
@@ -107,12 +132,30 @@ def project_command_preview(
     venv: bool = True,
     drf: bool = False,
     output_dir: str | None = None,
+    spec_path: str | None = None,
+    dry_run: bool = False,
+    force: bool = False,
+    app_name: str | None = None,
+    folders: list[str] | None = None,
+    packages: list[str] | None = None,
 ) -> dict[str, Any]:
     """Validate a generation request and return a portable CLI argument list."""
     name, framework, strategy, database, server = _validate_request(
         project_name, framework, strategy, database, server
     )
+    app_name = _validate_app_name(app_name)
+    folders = _validate_relative_paths(folders, "folders")
+    packages = _validate_relative_paths(packages, "packages")
+    if packages and strategy != "custom":
+        raise ValueError("packages are only available with the custom strategy.")
+    if packages and not set(packages).issubset(folders):
+        raise ValueError("every package must also appear in folders.")
+    if folders and strategy != "custom":
+        raise ValueError("folders are only available with the custom strategy.")
+
     args = ["init-app", name, "--framework", framework, "--type", strategy]
+    if spec_path:
+        args.extend(["--spec", spec_path])
     args.extend(["--db", database, "--venv", "y" if venv else "n"])
     if server:
         args.extend(["--server", server])
@@ -120,6 +163,16 @@ def project_command_preview(
         if framework != "django":
             raise ValueError("drf is only available for the django framework.")
         args.append("--drf")
+    if app_name:
+        args.extend(["--app-name", app_name])
+    if folders:
+        args.extend(["--folders", *folders])
+    if packages:
+        args.extend(["--packages", *packages])
+    if dry_run:
+        args.append("--dry-run")
+    if force:
+        args.append("--force")
     target = None
     if output_dir:
         target = str(Path(output_dir).expanduser().resolve() / name)

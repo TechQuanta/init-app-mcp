@@ -60,11 +60,14 @@ def recommend_init_app_flags(requirements: str) -> dict[str, Any]:
 def build_init_app_command(
     project_name: str, framework: str = "fastapi", strategy: str = "standard",
     database: str = "sqlite", server: str | None = None, venv: bool = True,
-    drf: bool = False, output_dir: str | None = None,
+    drf: bool = False, output_dir: str | None = None, spec_path: str | None = None,
+    dry_run: bool = False, force: bool = False, app_name: str | None = None,
+    folders: list[str] | None = None, packages: list[str] | None = None,
 ) -> dict[str, Any]:
     """Final step: validate confirmed user selections and return an init-app command without running it."""
     return service.project_command_preview(
-        project_name, framework, strategy, database, server, venv, drf, output_dir
+        project_name, framework, strategy, database, server, venv, drf, output_dir,
+        spec_path, dry_run, force, app_name, folders, packages,
     )
 
 

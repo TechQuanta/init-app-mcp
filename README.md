@@ -35,6 +35,12 @@ cd init-app-mcp
 python -m pip install .
 ```
 
+When published to PyPI, install it with:
+
+```bash
+python -m pip install init-app-mcp
+```
+
 For development:
 
 ```bash
@@ -150,6 +156,11 @@ After the project name and output directory are confirmed, call
 ```bash
 init-app billing-api --framework fastapi --type production --db postgresql --venv y --server gunicorn --output-dir ./projects
 ```
+
+The 0.2.0 catalog targets `init-app` 3.2.0. It includes metadata and command
+building support for JSON specifications, dry runs, safe overwrite opt-in,
+custom app names, folders, and packages. Use `dry_run: true` before asking a
+user to run a generation command.
 
 ## Development
 
