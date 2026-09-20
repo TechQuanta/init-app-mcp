@@ -157,6 +157,7 @@ def project_command_preview(
     dry_run: bool = False,
     force: bool = False,
     app_name: str | None = None,
+    apps: list[str] | None = None,
     folders: list[str] | None = None,
     packages: list[str] | None = None,
     env_manager: str | None = None,
@@ -169,6 +170,14 @@ def project_command_preview(
     if env_manager not in ENV_MANAGERS:
         raise ValueError(f"Unsupported environment manager: {env_manager}.")
     app_name = _validate_app_name(app_name)
+    if apps is not None:
+        if framework != "django":
+            raise ValueError("apps is only available for the django framework.")
+        if not apps:
+            raise ValueError("apps must contain at least one Django app name.")
+        app_names = [_validate_app_name(value) for value in apps]
+    else:
+        app_names = [app_name] if app_name else []
     folders = _validate_relative_paths(folders, "folders")
     packages = _validate_relative_paths(packages, "packages")
     if packages and strategy != "custom":
@@ -194,6 +203,8 @@ def project_command_preview(
         args.append("--drf")
     if app_name:
         args.extend(["--app-name", app_name])
+    if apps:
+        args.extend(["--apps", *app_names])
     if folders:
         args.extend(["--folders", *folders])
     if packages:

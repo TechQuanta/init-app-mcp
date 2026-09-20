@@ -77,12 +77,13 @@ def build_init_app_command(
     env_manager: str | None = None,
     drf: bool = False, output_dir: str | None = None, spec_path: str | None = None,
     dry_run: bool = False, force: bool = False, app_name: str | None = None,
+    apps: list[str] | None = None,
     folders: list[str] | None = None, packages: list[str] | None = None,
 ) -> dict[str, Any]:
     """Final step: validate confirmed user selections and return an init-app command without running it."""
     return service.project_command_preview(
         project_name, framework, strategy, database, server, venv, drf, output_dir,
-        spec_path, dry_run, force, app_name, folders, packages, env_manager=env_manager,
+        spec_path, dry_run, force, app_name, apps, folders, packages, env_manager=env_manager,
     )
 
 
