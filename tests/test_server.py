@@ -8,6 +8,8 @@ from init_app_mcp.server import TOOL_NAMES, main, mcp
 EXPECTED_TOOLS = {
     "build_init_app_command",
     "get_init_app_command_metadata",
+    "list_tool_domains",
+    "select_domain_tools",
     "list_project_blueprints",
     "recommend_init_app_flags",
 }

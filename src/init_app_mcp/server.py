@@ -33,6 +33,8 @@ mcp = FastMCP("init-app")
 TOOL_NAMES = (
     "build_init_app_command",
     "get_init_app_command_metadata",
+    "list_tool_domains",
+    "select_domain_tools",
     "list_project_blueprints",
     "recommend_init_app_flags",
 )
@@ -42,6 +44,18 @@ TOOL_NAMES = (
 def get_init_app_command_metadata() -> dict[str, Any]:
     """First step: return init-app command metadata, flags, values, and workflow."""
     return {**service.library_metadata(), **service.command_metadata()}
+
+
+@mcp.tool()
+def list_tool_domains() -> list[dict[str, Any]]:
+    """List parent domains such as research, writing, resume, and code with child tools."""
+    return service.list_tool_domains()
+
+
+@mcp.tool()
+def select_domain_tools(domain: str, tools: list[str] | None = None) -> dict[str, Any]:
+    """Select and validate multiple child tools under one parent domain."""
+    return service.select_domain_tools(domain, tools)
 
 
 @mcp.tool()
@@ -60,6 +74,7 @@ def recommend_init_app_flags(requirements: str) -> dict[str, Any]:
 def build_init_app_command(
     project_name: str, framework: str = "fastapi", strategy: str = "standard",
     database: str = "sqlite", server: str | None = None, venv: bool = True,
+    env_manager: str | None = None,
     drf: bool = False, output_dir: str | None = None, spec_path: str | None = None,
     dry_run: bool = False, force: bool = False, app_name: str | None = None,
     folders: list[str] | None = None, packages: list[str] | None = None,
@@ -67,7 +82,7 @@ def build_init_app_command(
     """Final step: validate confirmed user selections and return an init-app command without running it."""
     return service.project_command_preview(
         project_name, framework, strategy, database, server, venv, drf, output_dir,
-        spec_path, dry_run, force, app_name, folders, packages,
+        spec_path, dry_run, force, app_name, folders, packages, env_manager=env_manager,
     )
 
 

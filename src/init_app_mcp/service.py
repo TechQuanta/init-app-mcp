@@ -12,6 +12,7 @@ from . import __version__, catalog
 PROJECT_NAME = re.compile(r"^[A-Za-z][A-Za-z0-9_-]{0,62}$")
 APP_NAME = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 STRATEGIES = catalog.STRATEGIES
+ENV_MANAGERS = ("venv", "uv", "none")
 
 BLUEPRINT_SIGNALS = (
     ("mcp", ("mcp", "model context protocol", "agent tool", "tool server")),
@@ -109,6 +110,7 @@ def library_metadata() -> dict[str, Any]:
             "recommend_init_app_flags",
             "build_init_app_command",
         ],
+        "tool_domains": catalog.list_tool_domains(),
         "safety": "This server only returns metadata and command recommendations; it does not create files.",
     }
 
@@ -121,6 +123,25 @@ def list_blueprints() -> list[dict[str, Any]]:
 def command_metadata() -> dict[str, Any]:
     """Return the independent, machine-readable init-app CLI contract."""
     return catalog.command_metadata()
+
+
+def list_tool_domains() -> list[dict[str, Any]]:
+    """Return the parent domains and child tools exposed by this server."""
+    return catalog.list_tool_domains()
+
+
+def select_domain_tools(domain: str, tools: list[str] | None = None) -> dict[str, Any]:
+    """Validate a parent domain and optional child-tool selection."""
+    key = domain.strip().lower()
+    details = catalog.TOOL_DOMAINS.get(key)
+    if details is None:
+        raise ValueError(f"Unsupported tool domain: {domain}.")
+    available = list(details["tools"])
+    selected = available if tools is None else list(dict.fromkeys(tools))
+    unknown = [tool for tool in selected if tool not in available]
+    if unknown:
+        raise ValueError(f"Unsupported tools for {key}: {', '.join(unknown)}.")
+    return {"domain": key, "description": details["description"], "available_tools": available, "selected_tools": selected}
 
 
 def project_command_preview(
@@ -138,11 +159,15 @@ def project_command_preview(
     app_name: str | None = None,
     folders: list[str] | None = None,
     packages: list[str] | None = None,
+    env_manager: str | None = None,
 ) -> dict[str, Any]:
     """Validate a generation request and return a portable CLI argument list."""
     name, framework, strategy, database, server = _validate_request(
         project_name, framework, strategy, database, server
     )
+    env_manager = env_manager or ("venv" if venv else "none")
+    if env_manager not in ENV_MANAGERS:
+        raise ValueError(f"Unsupported environment manager: {env_manager}.")
     app_name = _validate_app_name(app_name)
     folders = _validate_relative_paths(folders, "folders")
     packages = _validate_relative_paths(packages, "packages")
@@ -156,7 +181,11 @@ def project_command_preview(
     args = ["init-app", name, "--framework", framework, "--type", strategy]
     if spec_path:
         args.extend(["--spec", spec_path])
-    args.extend(["--db", database, "--venv", "y" if venv else "n"])
+    args.extend(["--db", database])
+    if env_manager == "uv":
+        args.extend(["--env-manager", "uv"])
+    else:
+        args.extend(["--venv", "y" if env_manager == "venv" else "n"])
     if server:
         args.extend(["--server", server])
     if drf:
@@ -244,6 +273,7 @@ def recommend_flags(requirements: str) -> dict[str, Any]:
             "server": server,
             "drf": drf,
             "venv": True,
+            "env_manager": "venv",
         },
         "recommended_flags": [
             {"flag": "--framework", "value": framework},

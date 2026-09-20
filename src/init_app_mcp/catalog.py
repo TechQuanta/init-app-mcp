@@ -21,7 +21,8 @@ COMMAND_FLAGS = (
     {"name": "--type", "required": False, "default": "standard", "values": STRATEGIES, "description": "Build strategy."},
     {"name": "--db", "required": False, "default": "sqlite", "values": DATABASES, "description": "Database engine."},
     {"name": "--server", "required": False, "values_from": "selected blueprint", "description": "Runtime server."},
-    {"name": "--venv", "required": False, "default": "y", "values": ("y", "n"), "description": "Create a virtual environment."},
+    {"name": "--venv", "required": False, "default": "y", "values": ("y", "n"), "description": "Create a virtual environment (legacy option)."},
+    {"name": "--env-manager", "required": False, "default": "venv", "values": ("venv", "uv", "none"), "description": "Choose the environment and dependency manager."},
     {"name": "--app-name", "required": False, "value": "PYTHON_IDENTIFIER", "description": "Application package name (default: core_app)."},
     {"name": "--folders", "required": False, "only_for": "custom", "value": "RELATIVE_PATH [RELATIVE_PATH ...]", "description": "Custom project folders."},
     {"name": "--packages", "required": False, "only_for": "custom", "value": "RELATIVE_PATH [RELATIVE_PATH ...]", "description": "Folders that receive __init__.py; each must be in --folders."},
@@ -59,6 +60,29 @@ BLUEPRINTS: dict[str, dict[str, Any]] = {
     "mcp": {"kind": "specialized", "description": "MCP tool hub project.", "servers": ("na",)},
 }
 
+TOOL_DOMAINS: dict[str, dict[str, Any]] = {
+    "research": {
+        "description": "Investigate, compare, evaluate, and summarize information.",
+        "tools": ("compare_sources", "explain_topic", "evaluate_claims", "summarize_research"),
+    },
+    "writing": {
+        "description": "Draft, rewrite, structure, and adapt written content.",
+        "tools": ("draft_content", "rewrite_text", "write_email", "create_article"),
+    },
+    "resume": {
+        "description": "Build and tailor resumes, bullets, and application materials.",
+        "tools": ("build_resume", "tailor_resume", "improve_bullets", "write_cover_letter"),
+    },
+    "code": {
+        "description": "Write, debug, review, refactor, and explain software.",
+        "tools": ("write_code", "debug_code", "review_code", "refactor_code", "explain_code"),
+    },
+    "init-app": {
+        "description": "Create and configure Python project blueprints.",
+        "tools": ("get_init_app_command_metadata", "list_project_blueprints", "recommend_init_app_flags", "build_init_app_command"),
+    },
+}
+
 
 def list_blueprints() -> list[dict[str, Any]]:
     """Return MCP-ready metadata for every supported init-app blueprint."""
@@ -84,3 +108,11 @@ def command_metadata() -> dict[str, Any]:
             for flag in COMMAND_FLAGS
         ],
     }
+
+
+def list_tool_domains() -> list[dict[str, Any]]:
+    """Return parent domains and their selectable child tools."""
+    return [
+        {"id": domain, "description": details["description"], "tools": list(details["tools"])}
+        for domain, details in TOOL_DOMAINS.items()
+    ]
