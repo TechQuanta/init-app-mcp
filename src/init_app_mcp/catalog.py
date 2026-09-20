@@ -9,16 +9,22 @@ from __future__ import annotations
 from typing import Any
 
 
-INIT_APP_VERSION = "3.1.0"
+INIT_APP_VERSION = "3.2.0"
 STRATEGIES = ("standard", "production", "auto_config", "custom")
 DATABASES = ("postgresql", "mysql", "sqlite", "mongodb", "none")
 
 COMMAND_FLAGS = (
     {"name": "--framework", "required": True, "values_from": "blueprints", "description": "Project blueprint."},
+    {"name": "--spec", "required": False, "value": "FILE", "description": "JSON project specification; explicit flags override its values."},
+    {"name": "--dry-run", "required": False, "description": "Validate and print the resolved configuration without writing files."},
+    {"name": "--force", "required": False, "description": "Allow generation into an existing project directory."},
     {"name": "--type", "required": False, "default": "standard", "values": STRATEGIES, "description": "Build strategy."},
     {"name": "--db", "required": False, "default": "sqlite", "values": DATABASES, "description": "Database engine."},
     {"name": "--server", "required": False, "values_from": "selected blueprint", "description": "Runtime server."},
     {"name": "--venv", "required": False, "default": "y", "values": ("y", "n"), "description": "Create a virtual environment."},
+    {"name": "--app-name", "required": False, "value": "PYTHON_IDENTIFIER", "description": "Application package name (default: core_app)."},
+    {"name": "--folders", "required": False, "only_for": "custom", "value": "RELATIVE_PATH [RELATIVE_PATH ...]", "description": "Custom project folders."},
+    {"name": "--packages", "required": False, "only_for": "custom", "value": "RELATIVE_PATH [RELATIVE_PATH ...]", "description": "Folders that receive __init__.py; each must be in --folders."},
     {"name": "--drf", "required": False, "only_for": "django", "description": "Enable Django REST Framework."},
     {"name": "--output-dir", "required": False, "description": "Parent directory for the generated project."},
 )

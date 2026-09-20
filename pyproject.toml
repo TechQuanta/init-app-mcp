@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "init-app-mcp"
-version = "0.1.0"
-description = "Independent FastMCP server for metadata and init-app command recommendations."
+version = "0.2.0"
+description = "Independent FastMCP server for validated init-app command recommendations."
 readme = "README.md"
 requires-python = ">=3.10"
 license = {file = "LICENSE"}
@@ -44,3 +44,4 @@ where = ["src"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+pythonpath = ["src"]
