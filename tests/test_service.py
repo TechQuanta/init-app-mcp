@@ -26,7 +26,22 @@ def test_command_metadata_has_the_required_cli_contract():
     metadata = service.command_metadata()
     flags = {flag["name"] for flag in metadata["flags"]}
     assert metadata["command"] == "init-app <project_name>"
-    assert {"--framework", "--type", "--db", "--venv", "--spec", "--dry-run", "--force", "--app-name"} <= flags
+    assert {"--framework", "--type", "--db", "--venv", "--env-manager", "--spec", "--dry-run", "--force", "--app-name"} <= flags
+
+
+def test_uv_preview_uses_the_uv_manager_flag():
+    result = service.project_command_preview("uv_api", env_manager="uv")
+    assert result["arguments"][-2:] == ["--env-manager", "uv"]
+
+
+def test_domain_selection_supports_multiple_resume_tools():
+    result = service.select_domain_tools("resume", ["build_resume", "improve_bullets"])
+    assert result["selected_tools"] == ["build_resume", "improve_bullets"]
+
+
+def test_domain_selection_rejects_unknown_tools():
+    with pytest.raises(ValueError, match="Unsupported tools"):
+        service.select_domain_tools("code", ["build_resume"])
 
 
 def test_preview_supports_new_custom_and_safe_review_options():
@@ -55,6 +70,7 @@ def test_recommendation_maps_requirement_to_supported_flags():
         "server": "gunicorn",
         "drf": False,
         "venv": True,
+        "env_manager": "venv",
     }
     assert {item["flag"] for item in result["recommended_flags"]} >= {"--framework", "--type", "--db"}
 

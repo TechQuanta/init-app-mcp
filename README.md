@@ -18,6 +18,8 @@ returned command.
 - Lists supported web and specialized project blueprints.
 - Converts plain-English requirements into relevant, supported flag choices.
 - Validates confirmed choices and returns the exact command arguments.
+- Exposes parent tool domains for research, writing, resume, code, and init-app,
+  with validated multi-tool selections under each domain.
 - Never creates files, starts processes, or runs shell commands.
 
 ## Requirements
@@ -116,6 +118,12 @@ needed. Keep that terminal open while your
 MCP client is connected. Press `Ctrl+C` to stop it.
 
 ## Tools
+
+Use `list_tool_domains` to discover parent domains and their child tools, then
+call `select_domain_tools` with a domain and a list such as
+`["build_resume", "improve_bullets"]`. The init-app command builder also
+supports `env_manager` values `venv`, `uv`, and `none`; `uv` maps to
+`init-app ... --env-manager uv`.
 
 | Tool | Purpose |
 | --- | --- |
