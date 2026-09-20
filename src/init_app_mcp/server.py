@@ -1,25 +1,41 @@
-"""The FastMCP stdio server for init-app."""
+"""The FastMCP server for init-app, with stdio and HTTP transports."""
 
 from __future__ import annotations
 
 import argparse
 import json
+import os
+import sys
+from pathlib import Path
 from typing import Any
 
 try:
-    from mcp.server.fastmcp import FastMCP
+    from fastmcp import FastMCP
 except ImportError as exc:  # pragma: no cover - depends on package installation.
     raise SystemExit(
-        "init-app-mcp requires the FastMCP v1 SDK. "
-        "Install dependencies with: python -m pip install 'mcp>=1,<2'"
+        "init-app-mcp requires FastMCP. "
+        "Install dependencies with: python -m pip install 'fastmcp>=2,<3'"
     ) from exc
 
-from . import service
+# Keep package imports absolute.  When this module is invoked directly as
+# ``python server.py`` from ``src/init_app_mcp``, add its absolute ``src``
+# directory so the package remains importable without depending on CWD.
+ABSOLUTE_SOURCE_DIRECTORY = Path(__file__).resolve().parent.parent
+if str(ABSOLUTE_SOURCE_DIRECTORY) not in sys.path:
+    sys.path.insert(0, str(ABSOLUTE_SOURCE_DIRECTORY))
+
+from init_app_mcp import service
 
 
 # This module-level object is the MCP server. FastMCP reads the type hints,
 # parameter defaults, and docstrings below to publish its tool schemas to LLMs.
 mcp = FastMCP("init-app")
+TOOL_NAMES = (
+    "build_init_app_command",
+    "get_init_app_command_metadata",
+    "list_project_blueprints",
+    "recommend_init_app_flags",
+)
 
 
 @mcp.tool()
@@ -72,27 +88,27 @@ def main(argv: list[str] | None = None) -> None:
     )
     parser.add_argument(
         "--transport",
-        choices=("stdio", "sse", "streamable-http"),
+        choices=("stdio", "sse", "http", "streamable-http"),
         default="stdio",
-        help="MCP transport to run (default: stdio). Use streamable-http for local HTTP testing.",
+        help="MCP transport to run (default: stdio). Use http or streamable-http for hosted deployments.",
     )
     parser.add_argument(
         "--host",
-        default="127.0.0.1",
-        help="Host for HTTP transports (default: 127.0.0.1).",
+        default=os.environ.get("HOST", "127.0.0.1"),
+        help="Host for HTTP transports (default: HOST environment variable or 127.0.0.1).",
     )
     parser.add_argument(
         "--port",
         type=int,
-        default=8000,
-        help="Port for HTTP transports (default: 8000).",
+        default=int(os.environ.get("PORT", "8000")),
+        help="Port for HTTP transports (default: PORT environment variable or 8000).",
     )
     args = parser.parse_args(argv)
 
     if args.list_tools:
         print(
             json.dumps(
-                {"server": mcp.name, "tools": sorted(mcp._tool_manager._tools)},
+                {"server": mcp.name, "tools": sorted(TOOL_NAMES)},
                 indent=2,
             )
         )
@@ -108,9 +124,13 @@ def main(argv: list[str] | None = None) -> None:
 
     if not 1 <= args.port <= 65535:
         parser.error("--port must be between 1 and 65535.")
-    mcp.settings.host = args.host
-    mcp.settings.port = args.port
-    mcp.run(transport=args.transport)
+    transport = "http" if args.transport == "streamable-http" else args.transport
+    run_options: dict[str, Any] = {"transport": transport}
+    if transport != "stdio":
+        run_options.update({"host": args.host, "port": args.port})
+        if transport == "http":
+            run_options["path"] = "/mcp"
+    mcp.run(**run_options)
 
 
 if __name__ == "__main__":
