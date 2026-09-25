@@ -17,6 +17,14 @@ DBT_ADAPTERS = (
     "spark", "athena", "trino", "clickhouse", "dremio", "exasol", "oracle",
     "teradata", "sqlserver", "mysql", "synapse", "fabric", "motherduck", "custom",
 )
+DBT_ADAPTER_PACKAGES = {
+    "snowflake": "dbt-snowflake", "databricks": "dbt-databricks", "bigquery": "dbt-bigquery",
+    "redshift": "dbt-redshift", "postgres": "dbt-postgres", "duckdb": "dbt-duckdb",
+    "spark": "dbt-spark", "athena": "dbt-athena-community", "trino": "dbt-trino",
+    "clickhouse": "dbt-clickhouse", "dremio": "dbt-dremio", "exasol": "dbt-exasol",
+    "oracle": "dbt-oracle", "teradata": "dbt-teradata", "sqlserver": "dbt-sqlserver",
+    "mysql": "dbt-mysql", "synapse": "dbt-synapse", "fabric": "dbt-fabric", "motherduck": "dbt-motherduck",
+}
 
 COMMAND_FLAGS = (
     {"name": "--framework", "required": True, "values_from": "blueprints", "description": "Project blueprint."},
@@ -32,7 +40,7 @@ COMMAND_FLAGS = (
     {"name": "--dbt-adapter", "required": False, "only_for": "dbt_analytics", "default": "duckdb", "values": DBT_ADAPTERS, "description": "Warehouse adapter; selects the matching dbt package."},
     {"name": "--dbt-adapter-package", "required": False, "only_for": "dbt_analytics/custom", "value": "PYPI_PACKAGE", "description": "Any compatible adapter package for custom providers."},
     {"name": "--dbt-adapter-type", "required": False, "only_for": "dbt_analytics/custom", "value": "DBT_ADAPTER_TYPE", "description": "Profile type exposed by a custom adapter."},
-    {"name": "--dbt-profile", "required": False, "only_for": "dbt_analytics", "value": "PROFILE_NAME", "description": "Profile to create or preserve in ~/.dbt/profiles.yml."},
+    {"name": "--dbt-profile", "required": False, "only_for": "dbt_analytics", "value": "PROFILE_NAME", "description": "Profile to create or preserve in project .dbt/profiles.yml and ~/.dbt/profiles.yml."},
     {"name": "--dbt-target", "required": False, "only_for": "dbt_analytics", "default": "dev", "value": "TARGET_NAME", "description": "Target in the selected dbt profile."},
     {"name": "--folders", "required": False, "only_for": "custom", "value": "RELATIVE_PATH [RELATIVE_PATH ...]", "description": "Custom project folders."},
     {"name": "--packages", "required": False, "only_for": "custom", "value": "RELATIVE_PATH [RELATIVE_PATH ...]", "description": "Folders that receive __init__.py; each must be in --folders."},
@@ -64,7 +72,7 @@ BLUEPRINTS: dict[str, dict[str, Any]] = {
     "base": {"kind": "specialized", "description": "General Python project.", "servers": ("na",)},
     "hp_cli": {"kind": "specialized", "description": "High-performance command-line application.", "servers": ("na",)},
     "data_pipeline": {"kind": "specialized", "description": "ETL and workflow orchestration project.", "servers": ("na",)},
-    "dbt_analytics": {"kind": "specialized", "description": "Native dbt project with provider-aware, credential-free user profile setup.", "servers": ("na",), "dbt_adapters": DBT_ADAPTERS},
+    "dbt_analytics": {"kind": "specialized", "description": "Native dbt project with provider-aware, credential-free project and user profile setup.", "servers": ("na",), "dbt_adapters": DBT_ADAPTERS},
     "mlops_core": {"kind": "specialized", "description": "ML lifecycle and model-serving project.", "servers": ("na",)},
     "rag_ai": {"kind": "specialized", "description": "Retrieval-augmented generation project.", "servers": ("na",)},
     "mcp": {"kind": "specialized", "description": "MCP tool hub project.", "servers": ("na",)},

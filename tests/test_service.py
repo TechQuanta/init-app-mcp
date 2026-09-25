@@ -42,7 +42,9 @@ def test_dbt_preview_selects_snowflake_and_user_profile():
         dbt_adapter="snowflake",
         dbt_profile="finance",
     )
+    assert "--db" not in result["arguments"]
     assert result["arguments"][-4:] == ["--dbt-adapter", "snowflake", "--dbt-profile", "finance"]
+    assert result["dbt_setup"]["profiles"] == ["<project>/.dbt/profiles.yml", "~/.dbt/profiles.yml"]
 
 
 def test_dbt_preview_accepts_any_compatible_custom_adapter():

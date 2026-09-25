@@ -226,7 +226,8 @@ def project_command_preview(
     args = ["init-app", name, "--framework", framework, "--type", strategy]
     if spec_path:
         args.extend(["--spec", spec_path])
-    args.extend(["--db", database])
+    if framework != "dbt_analytics":
+        args.extend(["--db", database])
     if env_manager == "uv":
         args.extend(["--env-manager", "uv"])
     else:
@@ -237,7 +238,7 @@ def project_command_preview(
         if framework != "django":
             raise ValueError("drf is only available for the django framework.")
         args.append("--drf")
-    if app_name:
+    if app_name and framework != "dbt_analytics":
         args.extend(["--app-name", app_name])
     if apps:
         args.extend(["--apps", *app_names])
@@ -263,7 +264,23 @@ def project_command_preview(
     if output_dir:
         target = str(Path(output_dir).expanduser().resolve() / name)
         args.extend(["--output-dir", str(Path(output_dir).expanduser().resolve())])
-    return {"valid": True, "arguments": args, "target_directory": target}
+    result: dict[str, Any] = {"valid": True, "arguments": args, "target_directory": target}
+    if framework == "dbt_analytics":
+        result["dbt_setup"] = {
+            "adapter": dbt_adapter,
+            "adapter_package": dbt_adapter_package or catalog.DBT_ADAPTER_PACKAGES.get(dbt_adapter),
+            "profile": dbt_profile or name.replace("-", "_").lower(),
+            "target": dbt_target,
+            "profiles": ["<project>/.dbt/profiles.yml", "~/.dbt/profiles.yml"],
+            "runtime": "Init App creates or reuses the selected project environment, checks dbt-core and the adapter, then runs native dbt init.",
+            "commands": [
+                "dbt debug --profiles-dir .dbt",
+                "dbt deps --profiles-dir .dbt",
+                "dbt run --profiles-dir .dbt",
+            ],
+            "note": "dbt recognizes profiles.yml; user.yml is not a dbt profile file.",
+        }
+    return result
 
 
 def recommend_flags(requirements: str) -> dict[str, Any]:
