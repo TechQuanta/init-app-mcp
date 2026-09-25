@@ -13,6 +13,7 @@ PROJECT_NAME = re.compile(r"^[A-Za-z][A-Za-z0-9_-]{0,62}$")
 APP_NAME = re.compile(r"^[A-Za-z_][A-Za-z0-9_]*$")
 STRATEGIES = catalog.STRATEGIES
 ENV_MANAGERS = ("venv", "uv", "none")
+DBT_ADAPTERS = catalog.DBT_ADAPTERS
 
 BLUEPRINT_SIGNALS = (
     ("mcp", ("mcp", "model context protocol", "agent tool", "tool server")),
@@ -63,6 +64,30 @@ def _validate_relative_paths(values: list[str] | None, field: str) -> list[str]:
         if value not in result:
             result.append(value)
     return result
+
+
+def _validate_dbt_options(
+    framework: str, adapter: str, adapter_package: str | None, adapter_type: str | None,
+    profile: str | None, target: str,
+) -> tuple[str, str | None, str | None, str | None, str]:
+    if framework != "dbt_analytics":
+        if any(value is not None for value in (adapter_package, adapter_type, profile)) or adapter != "duckdb" or target != "dev":
+            raise ValueError("dbt options are only available for the dbt_analytics framework.")
+        return adapter, adapter_package, adapter_type, profile, target
+    adapter = adapter.lower().strip()
+    if adapter not in DBT_ADAPTERS:
+        raise ValueError(f"Unsupported dbt adapter: {adapter}.")
+    if adapter == "custom":
+        if not adapter_package or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9._-]*", adapter_package):
+            raise ValueError("custom dbt adapter requires a safe adapter_package.")
+        if not adapter_type or not APP_NAME.fullmatch(adapter_type):
+            raise ValueError("custom dbt adapter requires an adapter_type.")
+    elif adapter_package or adapter_type:
+        raise ValueError("adapter_package and adapter_type are only valid for the custom dbt adapter.")
+    for label, value in (("profile", profile), ("target", target)):
+        if value is not None and not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_-]*", value):
+            raise ValueError(f"dbt {label} must be a safe identifier.")
+    return adapter, adapter_package, adapter_type, profile, target
 
 
 def _frameworks() -> tuple[str, ...]:
@@ -160,11 +185,19 @@ def project_command_preview(
     folders: list[str] | None = None,
     packages: list[str] | None = None,
     env_manager: str | None = None,
+    dbt_adapter: str = "duckdb",
+    dbt_adapter_package: str | None = None,
+    dbt_adapter_type: str | None = None,
+    dbt_profile: str | None = None,
+    dbt_target: str = "dev",
 ) -> dict[str, Any]:
     """Validate a generation request and return a portable CLI argument list."""
     name, framework, strategy, database, server = _validate_request(
         project_name, framework, strategy, database, server
     )
+    if framework == "dbt_analytics":
+        # Warehouse connection is selected by --dbt-adapter, not the app DB flag.
+        database = "none"
     env_manager = env_manager or ("venv" if venv else "none")
     if env_manager not in ENV_MANAGERS:
         raise ValueError(f"Unsupported environment manager: {env_manager}.")
@@ -177,6 +210,9 @@ def project_command_preview(
         raise ValueError("every package must also appear in folders.")
     if folders and strategy != "custom":
         raise ValueError("folders are only available with the custom strategy.")
+    dbt_adapter, dbt_adapter_package, dbt_adapter_type, dbt_profile, dbt_target = _validate_dbt_options(
+        framework, dbt_adapter, dbt_adapter_package, dbt_adapter_type, dbt_profile, dbt_target,
+    )
 
     args = ["init-app", name, "--framework", framework, "--type", strategy]
     if spec_path:
@@ -194,6 +230,16 @@ def project_command_preview(
         args.append("--drf")
     if app_name:
         args.extend(["--app-name", app_name])
+    if framework == "dbt_analytics":
+        args.extend(["--dbt-adapter", dbt_adapter])
+        if dbt_adapter_package:
+            args.extend(["--dbt-adapter-package", dbt_adapter_package])
+        if dbt_adapter_type:
+            args.extend(["--dbt-adapter-type", dbt_adapter_type])
+        if dbt_profile:
+            args.extend(["--dbt-profile", dbt_profile])
+        if dbt_target != "dev":
+            args.extend(["--dbt-target", dbt_target])
     if folders:
         args.extend(["--folders", *folders])
     if packages:
@@ -240,6 +286,17 @@ def recommend_flags(requirements: str) -> dict[str, Any]:
             database = candidate
             database_reason = f"Requirement mentions {candidate}."
             break
+    if framework == "dbt_analytics":
+        database = "none"
+        database_reason = "dbt connects through the selected warehouse adapter, not --db."
+
+    dbt_adapter = next((
+        adapter for adapter, signals in (
+            ("snowflake", ("snowflake",)), ("databricks", ("databricks",)),
+            ("bigquery", ("bigquery", "google bigquery")), ("redshift", ("redshift",)),
+            ("postgres", ("postgres", "postgresql")), ("duckdb", ("duckdb",)),
+        ) if any(signal in text for signal in signals)
+    ), "duckdb")
 
     production_signals = (
         "production", "deploy", "docker", "kubernetes", "k8s", "ci/cd", "jenkins",
@@ -274,6 +331,7 @@ def recommend_flags(requirements: str) -> dict[str, Any]:
             "drf": drf,
             "venv": True,
             "env_manager": "venv",
+            **({"dbt_adapter": dbt_adapter} if framework == "dbt_analytics" else {}),
         },
         "recommended_flags": [
             {"flag": "--framework", "value": framework},
@@ -282,7 +340,8 @@ def recommend_flags(requirements: str) -> dict[str, Any]:
             {"flag": "--venv", "value": "y"},
         ]
         + ([{"flag": "--server", "value": server}] if server else [])
-        + ([{"flag": "--drf", "value": True}] if drf else []),
+        + ([{"flag": "--drf", "value": True}] if drf else [])
+        + ([{"flag": "--dbt-adapter", "value": dbt_adapter}] if framework == "dbt_analytics" else []),
         "reasoning": [framework_reason, database_reason],
         "questions": [
             "What project name should be used?",

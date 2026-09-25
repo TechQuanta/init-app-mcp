@@ -12,6 +12,11 @@ from typing import Any
 INIT_APP_VERSION = "3.2.0"
 STRATEGIES = ("standard", "production", "auto_config", "custom")
 DATABASES = ("postgresql", "mysql", "sqlite", "mongodb", "none")
+DBT_ADAPTERS = (
+    "snowflake", "databricks", "bigquery", "redshift", "postgres", "duckdb",
+    "spark", "athena", "trino", "clickhouse", "dremio", "exasol", "oracle",
+    "teradata", "sqlserver", "mysql", "synapse", "fabric", "motherduck", "custom",
+)
 
 COMMAND_FLAGS = (
     {"name": "--framework", "required": True, "values_from": "blueprints", "description": "Project blueprint."},
@@ -24,6 +29,11 @@ COMMAND_FLAGS = (
     {"name": "--venv", "required": False, "default": "y", "values": ("y", "n"), "description": "Create a virtual environment (legacy option)."},
     {"name": "--env-manager", "required": False, "default": "venv", "values": ("venv", "uv", "none"), "description": "Choose the environment and dependency manager."},
     {"name": "--app-name", "required": False, "value": "PYTHON_IDENTIFIER", "description": "Application package name (default: core_app)."},
+    {"name": "--dbt-adapter", "required": False, "only_for": "dbt_analytics", "default": "duckdb", "values": DBT_ADAPTERS, "description": "Warehouse adapter; selects the matching dbt package."},
+    {"name": "--dbt-adapter-package", "required": False, "only_for": "dbt_analytics/custom", "value": "PYPI_PACKAGE", "description": "Any compatible adapter package for custom providers."},
+    {"name": "--dbt-adapter-type", "required": False, "only_for": "dbt_analytics/custom", "value": "DBT_ADAPTER_TYPE", "description": "Profile type exposed by a custom adapter."},
+    {"name": "--dbt-profile", "required": False, "only_for": "dbt_analytics", "value": "PROFILE_NAME", "description": "Profile to create or preserve in ~/.dbt/profiles.yml."},
+    {"name": "--dbt-target", "required": False, "only_for": "dbt_analytics", "default": "dev", "value": "TARGET_NAME", "description": "Target in the selected dbt profile."},
     {"name": "--folders", "required": False, "only_for": "custom", "value": "RELATIVE_PATH [RELATIVE_PATH ...]", "description": "Custom project folders."},
     {"name": "--packages", "required": False, "only_for": "custom", "value": "RELATIVE_PATH [RELATIVE_PATH ...]", "description": "Folders that receive __init__.py; each must be in --folders."},
     {"name": "--drf", "required": False, "only_for": "django", "description": "Enable Django REST Framework."},
@@ -54,7 +64,7 @@ BLUEPRINTS: dict[str, dict[str, Any]] = {
     "base": {"kind": "specialized", "description": "General Python project.", "servers": ("na",)},
     "hp_cli": {"kind": "specialized", "description": "High-performance command-line application.", "servers": ("na",)},
     "data_pipeline": {"kind": "specialized", "description": "ETL and workflow orchestration project.", "servers": ("na",)},
-    "dbt_analytics": {"kind": "specialized", "description": "dbt analytics project.", "servers": ("na",)},
+    "dbt_analytics": {"kind": "specialized", "description": "Native dbt project with provider-aware, credential-free user profile setup.", "servers": ("na",), "dbt_adapters": DBT_ADAPTERS},
     "mlops_core": {"kind": "specialized", "description": "ML lifecycle and model-serving project.", "servers": ("na",)},
     "rag_ai": {"kind": "specialized", "description": "Retrieval-augmented generation project.", "servers": ("na",)},
     "mcp": {"kind": "specialized", "description": "MCP tool hub project.", "servers": ("na",)},
@@ -89,7 +99,7 @@ def list_blueprints() -> list[dict[str, Any]]:
     return [
         {
             "id": identifier,
-            **details,
+            **{key: list(value) if isinstance(value, tuple) else value for key, value in details.items()},
             "servers": list(details["servers"]),
             "strategies": list(STRATEGIES),
             "databases": list(DATABASES),
