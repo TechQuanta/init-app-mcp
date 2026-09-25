@@ -79,11 +79,20 @@ def build_init_app_command(
     dry_run: bool = False, force: bool = False, app_name: str | None = None,
     apps: list[str] | None = None,
     folders: list[str] | None = None, packages: list[str] | None = None,
+    dbt_adapter: str = "duckdb", dbt_adapter_package: str | None = None,
+    dbt_adapter_type: str | None = None, dbt_profile: str | None = None,
+    dbt_target: str = "dev",
 ) -> dict[str, Any]:
-    """Final step: validate confirmed user selections and return an init-app command without running it."""
+    """Final step: validate confirmed selections and return a minimal init-app command without running it.
+
+    For dbt, choose dbt_adapter and optionally dbt_profile/dbt_target. The returned
+    setup notes explain its project-local and user-level profiles.yml workflow.
+    """
     return service.project_command_preview(
         project_name, framework, strategy, database, server, venv, drf, output_dir,
         spec_path, dry_run, force, app_name, apps, folders, packages, env_manager=env_manager,
+        dbt_adapter=dbt_adapter, dbt_adapter_package=dbt_adapter_package,
+        dbt_adapter_type=dbt_adapter_type, dbt_profile=dbt_profile, dbt_target=dbt_target,
     )
 
 

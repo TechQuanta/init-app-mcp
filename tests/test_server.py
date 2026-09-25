@@ -2,7 +2,7 @@ import json
 
 from init_app_mcp import __version__
 from init_app_mcp import service
-from init_app_mcp.server import TOOL_NAMES, main, mcp
+from init_app_mcp.server import TOOL_NAMES, build_init_app_command, main, mcp
 
 
 EXPECTED_TOOLS = {
@@ -30,3 +30,8 @@ def test_metadata_diagnostic_matches_library_version(capsys):
     output = json.loads(capsys.readouterr().out)
     assert output["version"] == __version__
     assert output["command"] == service.command_metadata()["command"]
+
+
+def test_server_forwards_dbt_fields_to_the_command_builder():
+    preview = build_init_app_command("warehouse", framework="dbt_analytics", dbt_adapter="duckdb", dbt_profile="analytics")
+    assert preview["dbt_setup"]["profile"] == "analytics"

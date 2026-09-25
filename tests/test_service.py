@@ -34,6 +34,30 @@ def test_uv_preview_uses_the_uv_manager_flag():
     assert result["arguments"][-2:] == ["--env-manager", "uv"]
 
 
+def test_dbt_preview_selects_snowflake_and_user_profile():
+    result = service.project_command_preview(
+        "finance_transform",
+        framework="dbt_analytics",
+        database="none",
+        dbt_adapter="snowflake",
+        dbt_profile="finance",
+    )
+    assert "--db" not in result["arguments"]
+    assert result["arguments"][-4:] == ["--dbt-adapter", "snowflake", "--dbt-profile", "finance"]
+    assert result["dbt_setup"]["profiles"] == ["<project>/.dbt/profiles.yml", "~/.dbt/profiles.yml"]
+
+
+def test_dbt_preview_accepts_any_compatible_custom_adapter():
+    result = service.project_command_preview(
+        "warehouse",
+        framework="dbt_analytics",
+        dbt_adapter="custom",
+        dbt_adapter_package="dbt-acme",
+        dbt_adapter_type="acme",
+    )
+    assert "--dbt-adapter-package" in result["arguments"]
+
+
 def test_domain_selection_supports_multiple_resume_tools():
     result = service.select_domain_tools("resume", ["build_resume", "improve_bullets"])
     assert result["selected_tools"] == ["build_resume", "improve_bullets"]
